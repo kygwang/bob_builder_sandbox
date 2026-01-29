@@ -19,6 +19,16 @@ function DashboardCard({ title, children }) {
   );
 }
 
+// Theme toggle: lightweight, stores preference in localStorage and applies via data-theme on root
+function ThemeToggle({ theme, onToggle }) {
+  const isDark = theme === 'dark';
+  return (
+    <button aria-label="Toggle color theme" className="theme-toggle" onClick={onToggle}>
+      {isDark ? '🌞 Light' : '🌙 Dark'}
+    </button>
+  );
+}
+
 export default function App() {
   const totalRevenue = revenueStreams.reduce((acc, r) => acc + r.amount, 0);
 
@@ -26,11 +36,38 @@ export default function App() {
   const monthlyRevenue = [1200, 1650, 980, 2100, 2750, 1900];
   const maxMonth = Math.max(...monthlyRevenue, 1);
 
+  // Theme state and effects
+  const [theme, setTheme] = React.useState('dark');
+
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem('theme');
+      const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const initial = saved || (systemDark ? 'dark' : 'light');
+      setTheme(initial);
+      document.documentElement.setAttribute('data-theme', initial);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+  };
+
   return (
     <div className="app">
       <header className="header">
-        <h1>Moltbot Dashboard Studio</h1>
-        <p>Dashboard for Moltbot creation and revenue stream activity with mock data</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1>Moltbot Dashboard Studio</h1>
+            <p>Dashboard for Moltbot creation and revenue stream activity with mock data</p>
+          </div>
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
+        </div>
       </header>
       <main className="grid">
         <DashboardCard title="Moltbot Creation Dashboard">
